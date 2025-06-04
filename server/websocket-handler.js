@@ -14,6 +14,12 @@ class WebSocketHandler {
     this.wss.on("connection", (ws) => {
       console.log("Новое WebSocket подключение")
 
+      // Heartbeat механизм
+      ws.isAlive = true
+      ws.on("pong", () => {
+        ws.isAlive = true
+      })
+
       ws.on("message", (message) => {
         try {
           const data = JSON.parse(message)
@@ -32,12 +38,30 @@ class WebSocketHandler {
         console.error("WebSocket ошибка:", error)
       })
     })
+
+    // Heartbeat проверка каждые 30 секунд
+    setInterval(() => {
+      this.wss.clients.forEach((ws) => {
+        if (ws.isAlive === false) {
+          return ws.terminate()
+        }
+
+        ws.isAlive = false
+        ws.ping()
+      })
+    }, 30000)
   }
 
   handleMessage(ws, data) {
     switch (data.type) {
       case "user_connected":
         this.handleUserConnected(ws, data.user)
+        break
+      case "reconnect":
+        this.handleReconnect(ws, data)
+        break
+      case "ping":
+        this.send(ws, { type: "pong" })
         break
       case "create_room":
         this.handleCreateRoom(ws, data)
@@ -66,6 +90,30 @@ class WebSocketHandler {
 
     // Отправляем список комнат
     this.sendRoomsList(ws)
+  }
+
+  handleReconnect(ws, data) {
+    const { user, roomId } = data
+
+    // Восстанавливаем соединение пользователя
+    ws.userId = user.nickname
+    this.clients.set(user.nickname, ws)
+
+    // Если пользователь был в комнате, восстанавливаем состояние
+    if (roomId) {
+      const room = this.rooms.get(roomId)
+      if (room && room.players.find((p) => p.nickname === user.nickname)) {
+        this.send(ws, {
+          type: "room_rejoined",
+          room: room,
+        })
+      }
+    }
+
+    // Отправляем актуальный список комнат
+    this.sendRoomsList(ws)
+
+    console.log(`Пользователь ${user.nickname} переподключился`)
   }
 
   handleCreateRoom(ws, data) {
