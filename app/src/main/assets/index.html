@@ -1,469 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>WebSocket Example</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мафия - Онлайн игра</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
         }
 
-        #messages {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
         }
 
-        #messages li {
-            padding: 5px 10px;
-            border-bottom: 1px solid #eee;
+        /* Заголовок */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
         }
 
-        #input-container {
-            padding: 10px;
-            background-color: #fff;
-            border-top: 1px solid #ccc;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
         }
 
-        #message-input {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-right: 10px;
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
         }
 
-        #send-button {
-            padding: 8px 12px;
-            background-color: #007bff;
+        /* Карточки */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        /* Кнопки */
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        #notification-container {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-        }
-
-        .notification {
-            padding: 10px 20px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            color: white;
-        }
-
-        .success {
-            background-color: #28a745;
-        }
-
-        .warning {
-            background-color: #ffc107;
-            color: black;
-        }
-
-        .error {
-            background-color: #dc3545;
-        }
-
-        /* Настройки */
-        .settings-section {
-            margin-bottom: 25px;
-        }
-
-        .settings-section h3 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 18px;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 8px;
-        }
-
-        .settings-option {
-            background: #f8f9fa;
+            padding: 15px 30px;
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
 
-        .settings-option label {
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d, #495057);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        /* Формы */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #333;
         }
 
-        .theme-selector, .style-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .theme-option, .style-option {
-            padding: 10px;
+        .form-control {
+            width: 100%;
+            padding: 15px;
             border: 2px solid #e9ecef;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .theme-option.selected, .style-option.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        /* Магазин */
-        .shop-categories {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .shop-category {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
+            font-size: 16px;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            background: rgba(255,255,255,0.9);
         }
 
-        .shop-category.active {
+        .form-control:focus {
+            outline: none;
             border-color: #667eea;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        .shop-category-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
+        /* Секции */
+        .section {
+            display: none;
+        }
+
+        .section.active {
             display: block;
         }
 
-        .shop-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-        }
-
-        .shop-item {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 2px solid #e9ecef;
-        }
-
-        .shop-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .shop-item.owned {
-            border-color: #27ae60;
-            background: linear-gradient(135deg, #d4edda, #c3e6cb);
-        }
-
-        .shop-item-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-
-        .shop-item-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #333;
-        }
-
-        .shop-item-price {
-            color: #667eea;
-            font-weight: 600;
-        }
-
-        .shop-item-price.free {
-            color: #27ae60;
-        }
-
-        /* Темы */
-        .theme-dark {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-        }
-
-        .theme-dark .container {
-            background: #34495e;
-            color: white;
-        }
-
-        .theme-dark .form-card,
-        .theme-dark .menu-card,
-        .theme-dark .room-card,
-        .theme-dark .player-card,
-        .theme-dark .chat-message {
-            background: #2c3e50;
-            color: white;
-        }
-
-        .theme-neon {
-            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
-        }
-
-        .theme-neon .container {
-            background: #16213e;
-            color: #00ff88;
-            border: 2px solid #00ff88;
-            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
-        }
-
-        /* Аватарки */
-        .avatar-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .avatar-option {
-            background: white;
-            border: 3px solid #e9ecef;
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .avatar-option:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .avatar-option.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-
-        .avatar-option.locked {
-            opacity: 0.5;
-            cursor: not-allowed;
-            position: relative;
-        }
-
-        .avatar-option.locked::after {
-            content: '🔒';
-            position: absolute;
-            bottom: -5px;
-            right: -5px;
-            background: #e74c3c;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-        }
-
-        /* Загрузка изображений */
-        .image-upload-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 40px 20px;
-            margin-bottom: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .upload-area:hover {
-            border-color: #5a6fd8;
-            background: #f8f9ff;
-        }
-
-        .upload-area.dragover {
-            border-color: #27ae60;
-            background: #f0f9f0;
-        }
-
-        .upload-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
-            color: #667eea;
-        }
-
-        .upload-text {
-            font-size: 16px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .upload-hint {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .image-preview {
-            margin: 20px 0;
-            display: none;
-        }
-
-        .preview-container {
-            position: relative;
-            display: inline-block;
-        }
-
-        .preview-image {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #667eea;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .remove-image {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .custom-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #e9ecef;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .custom-avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .custom-avatar.selected {
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
-        }
-
-        /* Скрытый input для файлов */
-        .hidden-file-input {
-            display: none;
-        }
-
-        /* Кнопки управления изображением */
-        .image-controls {
+        /* Навигация */
+        .nav-tabs {
             display: flex;
             gap: 10px;
-            justify-content: center;
-            margin-top: 15px;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
         }
 
-        .image-controls button {
-            padding: 8px 16px;
+        .nav-tab {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 14px;
             transition: all 0.3s ease;
         }
 
-        .btn-crop {
-            background: #667eea;
-            color: white;
+        .nav-tab.active {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            transform: translateY(-2px);
         }
 
-        .btn-crop:hover {
-            background: #5a6fd8;
+        /* Уведомления */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
         }
 
-        .btn-remove {
-            background: #e74c3c;
-            color: white;
+        .notification {
+            background: white;
+            padding: 20px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.3s ease;
         }
 
-        .btn-remove:hover {
-            background: #c0392b;
+        .notification.success {
+            border-left-color: #28a745;
         }
 
-        /* Эффекты для никнеймов */
+        .notification.error {
+            border-left-color: #dc3545;
+        }
+
+        .notification.warning {
+            border-left-color: #ffc107;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Эффекты никнеймов */
         .nickname-container {
             position: relative;
             display: inline-block;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 18px;
             transition: all 0.3s ease;
+            margin: 5px;
         }
 
-        /* Стандартный стиль */
         .nickname-default {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             color: #333;
             border: 2px solid #dee2e6;
         }
 
-        /* Неоновый эффект */
         .nickname-neon {
             background: #000;
             color: #00ff88;
             border: 2px solid #00ff88;
-            box-shadow:
-                0 0 10px #00ff88,
-                0 0 20px #00ff88,
-                0 0 30px #00ff88;
+            box-shadow: 0 0 20px #00ff88;
             animation: neonPulse 2s infinite alternate;
         }
 
         @keyframes neonPulse {
-            from { box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88; }
-            to { box-shadow: 0 0 20px #00ff88, 0 0 30px #00ff88, 0 0 40px #00ff88; }
+            from { box-shadow: 0 0 20px #00ff88; }
+            to { box-shadow: 0 0 40px #00ff88, 0 0 60px #00ff88; }
         }
 
-        /* Огненный эффект */
         .nickname-fire {
             background: linear-gradient(45deg, #ff6b35, #f7931e, #ffcc02);
             color: #fff;
@@ -478,21 +255,6 @@
             100% { background: linear-gradient(45deg, #ffcc02, #ff6b35, #f7931e); }
         }
 
-        /* Ледяной эффект */
-        .nickname-ice {
-            background: linear-gradient(135deg, #a8e6cf, #7fcdcd, #81c7d4);
-            color: #2c3e50;
-            border: 2px solid #7fcdcd;
-            box-shadow: 0 0 15px rgba(127, 205, 205, 0.5);
-            animation: iceShimmer 3s infinite;
-        }
-
-        @keyframes iceShimmer {
-            0%, 100% { box-shadow: 0 0 15px rgba(127, 205, 205, 0.5); }
-            50% { box-shadow: 0 0 25px rgba(127, 205, 205, 0.8); }
-        }
-
-        /* Глитч эффект */
         .nickname-glitch {
             background: #000;
             color: #fff;
@@ -510,7 +272,7 @@
             width: 100%;
             height: 100%;
             background: #000;
-            padding: 8px 12px;
+            padding: 12px 20px;
             box-sizing: border-box;
         }
 
@@ -528,19 +290,19 @@
 
         @keyframes glitchTop {
             0% { transform: translateX(0); }
-            20% { transform: translateX(-2px); }
-            40% { transform: translateX(2px); }
-            60% { transform: translateX(-2px); }
-            80% { transform: translateX(2px); }
+            20% { transform: translateX(-3px); }
+            40% { transform: translateX(3px); }
+            60% { transform: translateX(-3px); }
+            80% { transform: translateX(3px); }
             100% { transform: translateX(0); }
         }
 
         @keyframes glitchBottom {
             0% { transform: translateX(0); }
-            20% { transform: translateX(2px); }
-            40% { transform: translateX(-2px); }
-            60% { transform: translateX(2px); }
-            80% { transform: translateX(-2px); }
+            20% { transform: translateX(3px); }
+            40% { transform: translateX(-3px); }
+            60% { transform: translateX(3px); }
+            80% { transform: translateX(-3px); }
             100% { transform: translateX(0); }
         }
 
@@ -553,7 +315,6 @@
             100% { background: #000; }
         }
 
-        /* Радужный эффект */
         .nickname-rainbow {
             background: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080);
             background-size: 400% 400%;
@@ -569,545 +330,534 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Золотой эффект */
         .nickname-gold {
             background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
             color: #8b4513;
             border: 2px solid #ffd700;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
             animation: goldShine 2s infinite;
         }
 
         @keyframes goldShine {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
-            50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+            0%, 100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
+            50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.9); }
         }
 
-        /* Матричный эффект */
-        .nickname-matrix {
-            background: #000;
-            color: #00ff00;
-            border: 2px solid #00ff00;
-            font-family: 'Courier New', monospace;
-            animation: matrixFlicker 0.1s infinite;
-            text-shadow: 0 0 10px #00ff00;
+        /* Админ панель */
+        .admin-panel {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        @keyframes matrixFlicker {
-            0% { opacity: 1; }
-            98% { opacity: 1; }
-            99% { opacity: 0.8; }
-            100% { opacity: 1; }
+        .admin-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
         }
 
-        /* Космический эффект */
-        .nickname-space {
-            background: linear-gradient(45deg, #0f0f23, #1a1a2e, #16213e);
-            color: #fff;
-            border: 2px solid #4a69bd;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nickname-space::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, transparent 20%, rgba(255,255,255,0.1) 21%, rgba(255,255,255,0.1) 34%, transparent 35%, transparent),
-                        linear-gradient(0deg, transparent 24%, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.05) 26%, transparent 27%, transparent 74%, rgba(255,255,255,0.05) 75%, rgba(255,255,255,0.05) 76%, transparent 77%, transparent);
-            animation: spaceMove 20s linear infinite;
-        }
-
-        @keyframes spaceMove {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        /* Лавовый эффект */
-        .nickname-lava {
-            background: linear-gradient(45deg, #8B0000, #FF4500, #FF6347, #FF0000);
-            background-size: 400% 400%;
-            color: #fff;
-            border: 2px solid #FF4500;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            animation: lavaFlow 4s ease infinite;
-            box-shadow: 0 0 20px rgba(255, 69, 0, 0.6);
-        }
-
-        @keyframes lavaFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Кибер эффект */
-        .nickname-cyber {
-            background: linear-gradient(45deg, #0a0a0a, #1a1a1a);
-            color: #00d4ff;
-            border: 2px solid #00d4ff;
-            position: relative;
-            text-shadow: 0 0 10px #00d4ff;
-            animation: cyberPulse 1.5s infinite;
-        }
-
-        .nickname-cyber::before {
-            content: '';
-            position: absolute;
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
             top: 0;
-            left: -100%;
+            left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.4), transparent);
-            animation: cyberScan 2s infinite;
-        }
-
-        @keyframes cyberPulse {
-            0%, 100% { box-shadow: 0 0 10px #00d4ff; }
-            50% { box-shadow: 0 0 20px #00d4ff, 0 0 30px #00d4ff; }
-        }
-
-        @keyframes cyberScan {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        /* Магический эффект */
-        .nickname-magic {
-            background: linear-gradient(45deg, #4a148c, #7b1fa2, #9c27b0, #e91e63);
-            background-size: 400% 400%;
-            color: #fff;
-            border: 2px solid #e91e63;
-            text-shadow: 0 0 10px rgba(233, 30, 99, 0.8);
-            animation: magicSparkle 3s ease infinite;
-            position: relative;
-        }
-
-        .nickname-magic::after {
-            content: '✨';
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            animation: sparkleRotate 2s infinite;
-        }
-
-        @keyframes magicSparkle {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes sparkleRotate {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.2); }
-            100% { transform: rotate(360deg) scale(1); }
-        }
-
-        /* Титулы */
-        .nickname-title {
-            position: relative;
-        }
-
-        .nickname-title::before {
-            content: attr(data-title);
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 10px;
             background: rgba(0,0,0,0.8);
-            color: #ffd700;
-            padding: 2px 6px;
-            border-radius: 4px;
-            white-space: nowrap;
+            z-index: 2000;
+            backdrop-filter: blur(5px);
         }
 
-        /* Рамки */
-        .nickname-frame-diamond {
-            border: 3px solid;
-            border-image: linear-gradient(45deg, #ffd700, #fff, #ffd700, #fff) 1;
-            position: relative;
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .nickname-frame-diamond::before {
-            content: '💎';
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            font-size: 16px;
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
         }
 
-        .nickname-frame-crown {
-            border: 3px solid #ffd700;
-            position: relative;
+        /* Список игроков */
+        .players-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
         }
 
-        .nickname-frame-crown::before {
-            content: '👑';
-            position: absolute;
-            top: -15px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 20px;
+        .player-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        .nickname-frame-fire {
-            border: 3px solid #ff4500;
-            position: relative;
+        .player-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
         }
 
-        .nickname-frame-fire::before,
-        .nickname-frame-fire::after {
-            content: '🔥';
-            position: absolute;
-            top: -10px;
-            font-size: 16px;
-            animation: fireFlicker 1s infinite alternate;
+        /* Чат */
+        .chat-container {
+            height: 400px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
         }
 
-        .nickname-frame-fire::before {
-            left: -10px;
+        .chat-messages {
+            height: 350px;
+            overflow-y: auto;
+            padding: 15px;
         }
 
-        .nickname-frame-fire::after {
-            right: -10px;
+        .chat-input-container {
+            display: flex;
+            padding: 10px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-right: 10px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        /* Темы */
+        .theme-dark {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+
+        .theme-dark .card {
+            background: rgba(52, 73, 94, 0.95);
+            color: white;
+        }
+
+        .theme-dark .form-control {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-color: #495057;
+        }
+
+        .theme-neon {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+        }
+
+        .theme-neon .card {
+            background: rgba(22, 33, 62, 0.95);
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .admin-controls {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>WebSocket Chat</h1>
-    <ul id="messages"></ul>
-    <div id="input-container">
-        <input type="text" id="message-input" placeholder="Type your message...">
-        <button id="send-button">Send</button>
-    </div>
-    <div id="notification-container"></div>
+    <div class="container">
+        <div class="header">
+            <h1>🎭 МАФИЯ</h1>
+            <p>Психологическая игра для компании</p>
+        </div>
 
-    <!-- Секция настроек -->
-    <div class="section" id="settingsSection">
-        <div class="settings-section">
-            <h3>🎨 Тема оформления</h3>
-            <div class="settings-option">
-                <div>
-                    <label>Выберите тему:</label>
-                    <div class="theme-selector">
-                        <div class="theme-option selected" data-theme="default" onclick="changeTheme('default')">
-                            <div style="font-size: 20px;">🌟</div>
-                            <div>Стандарт</div>
-                        </div>
-                        <div class="theme-option" data-theme="dark" onclick="changeTheme('dark')">
-                            <div style="font-size: 20px;">🌙</div>
-                            <div>Темная</div>
-                        </div>
-                        <div class="theme-option" data-theme="neon" onclick="changeTheme('neon')">
-                            <div style="font-size: 20px;">⚡</div>
-                            <div>Неон</div>
-                        </div>
+        <!-- Навигация -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('loginSection')">🔐 Вход</button>
+            <button class="nav-tab" onclick="showSection('gameSection')">🎮 Игра</button>
+            <button class="nav-tab" onclick="showSection('profileSection')">👤 Профиль</button>
+            <button class="nav-tab" onclick="showSection('shopSection')">🛒 Магазин</button>
+            <button class="nav-tab" onclick="showSection('settingsSection')">⚙️ Настройки</button>
+        </div>
+
+        <!-- Секция входа/регистрации -->
+        <div class="section active" id="loginSection">
+            <div class="card">
+                <div id="loginForm">
+                    <h2 style="text-align: center; margin-bottom: 30px;">Добро пожаловать!</h2>
+                    
+                    <div class="form-group">
+                        <label for="nickname">Никнейм</label>
+                        <input type="text" id="nickname" class="form-control" placeholder="Введите никнейм" maxlength="20">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="Введите email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Пароль</label>
+                        <input type="password" id="password" class="form-control" placeholder="Введите пароль" required>
+                    </div>
+                    
+                    <button class="btn btn-success" onclick="registerUser()" style="width: 100%; margin-bottom: 15px;">
+                        🚀 Начать игру
+                    </button>
+                    
+                    <div style="text-align: center; color: #666;">
+                        <small>Регистрируясь, вы соглашаетесь с правилами игры</small>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="settings-section">
-            <h3>🎭 Стиль интерфейса</h3>
-            <div class="settings-option">
-                <div>
-                    <label>Анимации:</label>
-                    <div style="margin-top: 10px;">
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="animationsEnabled" checked onchange="toggleAnimations()">
-                            <span>Включить анимации</span>
-                        </label>
+
+        <!-- Секция игры -->
+        <div class="section" id="gameSection">
+            <!-- Админ панель (только для Anubis) -->
+            <div class="admin-panel" id="adminPanel" style="display: none;">
+                <h3>🛡️ Админ панель</h3>
+                <p>Добро пожаловать, администратор!</p>
+                <div class="admin-controls">
+                    <button class="btn btn-warning" onclick="forceStartGame()">⚡ Принудительный старт</button>
+                    <button class="btn btn-secondary" onclick="addBot()">🤖 Добавить бота</button>
+                    <button class="btn btn-danger" onclick="endGame()">🛑 Завершить игру</button>
+                    <button class="btn btn-danger" onclick="showKickModal()">👢 Кикнуть игрока</button>
+                    <button class="btn btn-danger" onclick="showBanModal()">🔨 Забанить игрока</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🎮 Игровое лобби</h2>
+                
+                <div class="players-list" id="playersList">
+                    <!-- Список игроков -->
+                </div>
+                
+                <div class="chat-container" style="margin-top: 20px;">
+                    <div class="chat-messages" id="chatMessages">
+                        <!-- Сообщения чата -->
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chatInput" class="chat-input" placeholder="Введите сообщение..." maxlength="300">
+                        <button class="btn" onclick="sendMessage()">📤</button>
                     </div>
                 </div>
             </div>
-            
-            <div class="settings-option">
-                <div>
-                    <label>Звуки:</label>
-                    <div style="margin-top: 10px;">
-                        <label style="display: flex; align-items: center; gap: 10px;">
-                            <input type="checkbox" id="soundsEnabled" checked onchange="toggleSounds()">
-                            <span>Включить звуки</span>
-                        </label>
+        </div>
+
+        <!-- Секция профиля -->
+        <div class="section" id="profileSection">
+            <div class="card">
+                <h2>👤 Мой профиль</h2>
+                
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div id="profileAvatar" style="width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 20px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">
+                        🎭
+                    </div>
+                    
+                    <div id="profileNickname" style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">
+                        <!-- Никнейм с эффектами -->
+                    </div>
+                    
+                    <div id="profileEmail" style="color: #666; margin-bottom: 20px;">
+                        <!-- Email -->
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; text-align: center;">
+                    <div>
+                        <div style="font-size: 32px; font-weight: 700; color: #667eea;" id="gamesPlayed">0</div>
+                        <div style="color: #666;">Игр сыграно</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 32px; font-weight: 700; color: #28a745;" id="gamesWon">0</div>
+                        <div style="color: #666;">Побед</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 32px; font-weight: 700; color: #ffc107;" id="winRate">0%</div>
+                        <div style="color: #666;">Процент побед</div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <button class="btn btn-success" onclick="saveSettings()">Сохранить настройки</button>
-    </div>
 
-    <!-- Секция магазина -->
-    <div class="section" id="shopSection">
-        <div class="shop-categories">
-            <div class="shop-category active" data-category="styles" onclick="showShopCategory('styles')">
-                <span class="shop-category-icon">🎨</span>
-                <div>Стили</div>
-            </div>
-            <div class="shop-category" data-category="frames" onclick="showShopCategory('frames')">
-                <span class="shop-category-icon">🖼️</span>
-                <div>Рамки</div>
-            </div>
-            <div class="shop-category" data-category="titles" onclick="showShopCategory('titles')">
-                <span class="shop-category-icon">🏆</span>
-                <div>Титулы</div>
-            </div>
-            <div class="shop-category" data-category="avatars" onclick="showShopCategory('avatars')">
-                <span class="shop-category-icon">👤</span>
-                <div>Аватарки</div>
-            </div>
-        </div>
-        
-        <div class="shop-items" id="shopItems">
-            <!-- Товары будут загружены динамически -->
-        </div>
-    </div>
-
-    <!-- Секция аватарок -->
-    <div class="section" id="avatarsSection">
-        <div class="image-upload-section">
-            <h3 style="margin-bottom: 20px; color: #333;">📸 Загрузить свою аватарку</h3>
-            
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-                <div class="upload-icon">📷</div>
-                <div class="upload-text">Нажмите или перетащите изображение</div>
-                <div class="upload-hint">Поддерживаются: JPG, PNG, GIF (макс. 5MB)</div>
-            </div>
-            
-            <input type="file" id="fileInput" class="hidden-file-input" accept="image/*" onchange="handleFileSelect(event)">
-            
-            <div class="image-preview" id="imagePreview">
-                <div class="preview-container">
-                    <img id="previewImage" class="preview-image" alt="Предпросмотр">
-                    <button class="remove-image" onclick="removePreviewImage()">×</button>
+        <!-- Секция магазина -->
+        <div class="section" id="shopSection">
+            <div class="card">
+                <h2>🛒 Магазин эффектов</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                    <button class="btn active" data-category="styles" onclick="showShopCategory('styles')">🎨 Стили</button>
+                    <button class="btn" data-category="frames" onclick="showShopCategory('frames')">🖼️ Рамки</button>
+                    <button class="btn" data-category="titles" onclick="showShopCategory('titles')">🏆 Титулы</button>
                 </div>
-                <div class="image-controls">
-                    <button class="btn-crop" onclick="cropAndSaveImage()">✂️ Обрезать и сохранить</button>
-                    <button class="btn-remove" onclick="removePreviewImage()">🗑️ Удалить</button>
+                
+                <div id="shopItems" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+                    <!-- Товары магазина -->
+                </div>
+                
+                <div style="margin-top: 30px; text-align: center;">
+                    <h3>Предпросмотр:</h3>
+                    <div id="nicknamePreview" style="margin: 20px 0; font-size: 24px;">
+                        <!-- Предпросмотр никнейма -->
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="form-card">
-            <h2 style="margin-bottom: 20px; text-align: center; color: #333;">Выбор аватарки</h2>
-            
-            <!-- Пользовательские аватарки -->
-            <div id="customAvatarsSection" style="display: none;">
-                <h3 style="margin-bottom: 15px; color: #333;">🖼️ Ваши аватарки</h3>
-                <div class="avatar-grid" id="customAvatarGrid">
-                    <!-- Пользовательские аватарки -->
+        <!-- Секция настроек -->
+        <div class="section" id="settingsSection">
+            <div class="card">
+                <h2>⚙️ Настройки</h2>
+                
+                <div class="form-group">
+                    <label>🎨 Тема оформления</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 10px;">
+                        <button class="btn active" data-theme="default" onclick="changeTheme('default')">🌟 Стандарт</button>
+                        <button class="btn" data-theme="dark" onclick="changeTheme('dark')">🌙 Темная</button>
+                        <button class="btn" data-theme="neon" onclick="changeTheme('neon')">⚡ Неон</button>
+                    </div>
                 </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="animationsEnabled" checked onchange="toggleAnimations()">
+                        🎭 Включить анимации
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="soundsEnabled" checked onchange="toggleSounds()">
+                        🔊 Включить звуки
+                    </label>
+                </div>
+                
+                <button class="btn btn-success" onclick="saveSettings()">💾 Сохранить настройки</button>
             </div>
-            
-            <!-- Стандартные аватарки -->
-            <h3 style="margin-bottom: 15px; color: #333;">🎭 Стандартные аватарки</h3>
-            <div class="avatar-grid" id="avatarGrid">
-                <!-- Стандартные аватарки -->
-            </div>
-            
-            <button class="btn" onclick="saveAvatar()">Сохранить выбор</button>
         </div>
     </div>
 
-    <div class="nickname-preview-section">
-        <h3>Предпросмотр никнейма:</h3>
-        <div id="nicknamePreview" style="text-align: center; margin: 20px 0; font-size: 18px;">
-            <!-- Предпросмотр никнейма с эффектами -->
+    <!-- Модальные окна -->
+    <div class="modal" id="kickModal">
+        <div class="modal-content">
+            <h3>👢 Кикнуть игрока</h3>
+            <div class="form-group">
+                <label>Выберите игрока:</label>
+                <select id="kickPlayerSelect" class="form-control">
+                    <!-- Список игроков -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Причина:</label>
+                <input type="text" id="kickReason" class="form-control" placeholder="Укажите причину">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-danger" onclick="confirmKick()">👢 Кикнуть</button>
+                <button class="btn btn-secondary" onclick="closeModal('kickModal')">❌ Отмена</button>
+            </div>
         </div>
     </div>
+
+    <div class="modal" id="banModal">
+        <div class="modal-content">
+            <h3>🔨 Забанить игрока</h3>
+            <div class="form-group">
+                <label>Выберите игрока:</label>
+                <select id="banPlayerSelect" class="form-control">
+                    <!-- Список игроков -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Причина:</label>
+                <input type="text" id="banReason" class="form-control" placeholder="Укажите причину" required>
+            </div>
+            <div class="form-group">
+                <label>Срок бана:</label>
+                <select id="banDuration" class="form-control">
+                    <option value="1">1 час</option>
+                    <option value="24">1 день</option>
+                    <option value="168">1 неделя</option>
+                    <option value="720">1 месяц</option>
+                    <option value="0">Навсегда</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-danger" onclick="confirmBan()">🔨 Забанить</button>
+                <button class="btn btn-secondary" onclick="closeModal('banModal')">❌ Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контейнер уведомлений -->
+    <div class="notification-container" id="notificationContainer"></div>
 
     <script>
-        // Добавим в начало JavaScript секции
+        // Глобальные переменные
         let reconnectAttempts = 0;
         const maxReconnectAttempts = 5;
         let reconnectTimeout;
         let heartbeatInterval;
+        let currentUser = null;
+        let ws = null;
+        let isAdmin = false;
 
-        const SERVER_URL = 'ws://localhost:8080'; // Замените на адрес вашего сервера
-        let ws;
-        let currentUser = 'User-' + Math.floor(Math.random() * 1000); // Генерируем случайное имя пользователя
+        const SERVER_URL = 'wss://glitter-1.onrender.com';
 
-        // Переменные для работы с изображениями
-        let selectedAvatarType = 'emoji'; // 'emoji' или 'custom'
-        let selectedAvatarValue = '🎭';
-        let customAvatars = JSON.parse(localStorage.getItem('customAvatars') || '[]');
+        // Данные эффектов для никнеймов
+        const nicknameEffects = {
+            styles: [
+                { id: 'default', name: 'Стандарт', class: 'nickname-default', price: 0, owned: true },
+                { id: 'neon', name: 'Неон', class: 'nickname-neon', price: 0, owned: true },
+                { id: 'fire', name: 'Огонь', class: 'nickname-fire', price: 0, owned: true },
+                { id: 'glitch', name: 'Глитч', class: 'nickname-glitch', price: 0, owned: true },
+                { id: 'rainbow', name: 'Радуга', class: 'nickname-rainbow', price: 0, owned: true },
+                { id: 'gold', name: 'Золото', class: 'nickname-gold', price: 0, owned: true }
+            ],
+            frames: [
+                { id: 'none', name: 'Без рамки', class: '', price: 0, owned: true },
+                { id: 'diamond', name: 'Алмаз', class: 'nickname-frame-diamond', price: 0, owned: true },
+                { id: 'crown', name: 'Корона', class: 'nickname-frame-crown', price: 0, owned: true }
+            ],
+            titles: [
+                { id: 'none', name: 'Без титула', title: '', price: 0, owned: true },
+                { id: 'master', name: 'Мастер', title: '👑 МАСТЕР', price: 0, owned: true },
+                { id: 'legend', name: 'Легенда', title: '⭐ ЛЕГЕНДА', price: 0, owned: true }
+            ]
+        };
 
-        // Функции для загрузки изображений
-        function setupImageUpload() {
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInput = document.getElementById('fileInput');
-            
-            // Drag & Drop
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
+        let selectedNicknameStyle = 'default';
+        let selectedNicknameFrame = 'none';
+        let selectedNicknameTitle = 'none';
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadNicknameEffects();
+        });
+
+        // Функции навигации
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
             });
             
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
-            });
-            
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    handleFile(files[0]);
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Регистрация пользователя
+        async function registerUser() {
+            const nickname = document.getElementById('nickname').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!nickname || nickname.length < 3) {
+                showNotification('Никнейм должен содержать минимум 3 символа!', 'error');
+                return;
+            }
+
+            if (!email || !email.includes('@')) {
+                showNotification('Введите корректный email!', 'error');
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                showNotification('Пароль должен содержать минимум 6 символов!', 'error');
+                return;
+            }
+
+            // Проверка уникальности никнейма
+            try {
+                const response = await fetch(`https://glitter-1.onrender.com/api/check-nickname`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nickname })
+                });
+
+                const result = await response.json();
+                if (!result.isUnique) {
+                    showNotification('Этот никнейм уже занят!', 'error');
+                    return;
                 }
-            });
-        }
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                handleFile(file);
+            } catch (error) {
+                console.error('Ошибка проверки никнейма:', error);
             }
-        }
 
-        function handleFile(file) {
-            // Проверяем тип файла
-            if (!file.type.startsWith('image/')) {
-                showNotification('Пожалуйста, выберите изображение!', 'error');
-                return;
-            }
-            
-            // Проверяем размер файла (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                showNotification('Размер файла не должен превышать 5MB!', 'error');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                showImagePreview(e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function showImagePreview(imageSrc) {
-            const preview = document.getElementById('imagePreview');
-            const previewImage = document.getElementById('previewImage');
-            
-            previewImage.src = imageSrc;
-            preview.style.display = 'block';
-        }
-
-        function removePreviewImage() {
-            const preview = document.getElementById('imagePreview');
-            const previewImage = document.getElementById('previewImage');
-            const fileInput = document.getElementById('fileInput');
-            
-            preview.style.display = 'none';
-            previewImage.src = '';
-            fileInput.value = '';
-        }
-
-        function cropAndSaveImage() {
-            const previewImage = document.getElementById('previewImage');
-            if (!previewImage.src) {
-                showNotification('Нет изображения для сохранения!', 'error');
-                return;
-            }
-            
-            // Создаем canvas для обрезки
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const size = 150; // Размер аватарки
-            
-            canvas.width = size;
-            canvas.height = size;
-            
-            // Создаем новое изображение
-            const img = new Image();
-            img.onload = function() {
-                // Вычисляем размеры для обрезки в квадрат
-                const minSize = Math.min(img.width, img.height);
-                const x = (img.width - minSize) / 2;
-                const y = (img.height - minSize) / 2;
-                
-                // Создаем круглую маску
-                ctx.beginPath();
-                ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
-                ctx.clip();
-                
-                // Рисуем изображение
-                ctx.drawImage(img, x, y, minSize, minSize, 0, 0, size, size);
-                
-                // Получаем результат
-                const croppedImageData = canvas.toDataURL('image/png');
-                
-                // Сохраняем аватарку
-                saveCustomAvatar(croppedImageData);
-            };
-            
-            img.src = previewImage.src;
-        }
-
-        function saveCustomAvatar(imageData) {
-            const avatarId = 'custom_' + Date.now();
-            const newAvatar = {
-                id: avatarId,
-                data: imageData,
+            // Создаем пользователя
+            currentUser = {
+                nickname,
+                email,
+                password,
+                avatar: '🎭',
+                gamesPlayed: 0,
+                gamesWon: 0,
                 createdAt: new Date().toISOString()
             };
-            
-            customAvatars.push(newAvatar);
-            
-            // Ограничиваем количество пользовательских аватарок (например, 10)
-            if (customAvatars.length > 10) {
-                customAvatars = customAvatars.slice(-10);
+
+            // Проверяем админ права
+            isAdmin = nickname === 'Anubis';
+            if (isAdmin) {
+                document.getElementById('adminPanel').style.display = 'block';
+                showNotification('Добро пожаловать, администратор!', 'success');
             }
-            
-            localStorage.setItem('customAvatars', JSON.stringify(customAvatars));
-            
-            // Обновляем отображение
-            loadCustomAvatars();
-            removePreviewImage();
-            
-            showNotification('Аватарка сохранена!', 'success');
+
+            localStorage.setItem('mafiaUser', JSON.stringify(currentUser));
+            updateProfileDisplay();
+            connectWebSocket();
+            showSection('gameSection');
+            showNotification('Добро пожаловать в игру!', 'success');
         }
 
-        function loadCustomAvatars() {
-            const container = document.getElementById('customAvatarGrid');
-            const section = document.getElementById('customAvatarsSection');
-            
-            if (customAvatars.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-            
-            section.style.display = 'block';
-            
-            container.innerHTML = customAvatars.map(avatar => `
-                <div class="avatar-option ${selectedAvatarType === 'custom' && selectedAvatarValue === avatar.id ? 'selected' : ''}" 
-                     onclick="selectCustomAvatar('${avatar.id}')">
-                    <img src="${avatar.data}" class="custom-avatar" alt="Пользовательская аватарка">
-                </div>
-            `).join('');
-        }
-
-        function selectCustomAvatar(avatarId) {
-            // Убираем выделение со всех аватарок
-            document.querySelectorAll('.avatar-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            
-            // Выделяем выбранную
-            event.target.closest('.avatar-option').classList.add('selected');
-            
-            selectedAvatarType = 'custom';
-            selectedAvatarValue = avatarId;
-        }
-
+        // WebSocket подключение
         function connectWebSocket() {
-            if (ws && ws.readyState === WebSocket.OPEN) {
-                return;
-            }
+            if (ws && ws.readyState === WebSocket.OPEN) return;
 
             ws = new WebSocket(SERVER_URL);
             
@@ -1115,7 +865,6 @@
                 console.log('WebSocket подключен');
                 reconnectAttempts = 0;
                 
-                // Отправляем информацию о пользователе
                 if (currentUser) {
                     ws.send(JSON.stringify({
                         type: 'user_connected',
@@ -1123,17 +872,14 @@
                     }));
                 }
                 
-                // Запускаем heartbeat
                 startHeartbeat();
-                
-                showNotification('Подключение восстановлено', 'success');
+                showNotification('Подключение установлено', 'success');
             };
             
             ws.onclose = function() {
                 console.log('WebSocket отключен');
                 stopHeartbeat();
                 
-                // Автоматическое переподключение
                 if (reconnectAttempts < maxReconnectAttempts) {
                     reconnectAttempts++;
                     const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
@@ -1154,21 +900,48 @@
 
             ws.onmessage = function(event) {
                 const message = JSON.parse(event.data);
-
-                switch (message.type) {
-                    case 'chat':
-                        addMessage(message.user, message.text);
-                        break;
-                    case 'user_connected':
-                        showNotification(message.user + ' подключился', 'success');
-                        break;
-                    case 'pong':
-                        // Сервер отвечает на ping
-                        break;
-                    default:
-                        console.log('Неизвестный тип сообщения:', message);
-                }
+                handleWebSocketMessage(message);
             };
+        }
+
+        function handleWebSocketMessage(message) {
+            switch (message.type) {
+                case 'chat_message':
+                    addChatMessage(message.sender, message.message);
+                    break;
+                case 'user_connected':
+                    showNotification(`${message.user.nickname} подключился`, 'success');
+                    break;
+                case 'user_disconnected':
+                    showNotification(`${message.user.nickname} отключился`, 'warning');
+                    break;
+                case 'player_kicked':
+                    if (message.player === currentUser.nickname) {
+                        showNotification(`Вы были кикнуты: ${message.reason}`, 'error');
+                    } else {
+                        showNotification(`${message.player} был кикнут: ${message.reason}`, 'warning');
+                    }
+                    break;
+                case 'player_banned':
+                    if (message.player === currentUser.nickname) {
+                        showNotification(`Вы были забанены: ${message.reason}`, 'error');
+                        // Блокируем интерфейс
+                    } else {
+                        showNotification(`${message.player} был забанен: ${message.reason}`, 'warning');
+                    }
+                    break;
+                case 'game_force_started':
+                    showNotification('Игра принудительно запущена администратором', 'warning');
+                    break;
+                case 'bot_added':
+                    showNotification('Бот добавлен в игру', 'success');
+                    break;
+                case 'game_ended':
+                    showNotification('Игра завершена администратором', 'warning');
+                    break;
+                default:
+                    console.log('Неизвестный тип сообщения:', message);
+            }
         }
 
         function startHeartbeat() {
@@ -1176,7 +949,7 @@
                 if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'ping' }));
                 }
-            }, 25000); // Каждые 25 секунд
+            }, 25000);
         }
 
         function stopHeartbeat() {
@@ -1186,173 +959,160 @@
             }
         }
 
-        function addMessage(user, text) {
-            const messageElement = document.createElement('li');
-            messageElement.textContent = user + ': ' + text;
-            document.getElementById('messages').appendChild(messageElement);
-        }
-
+        // Чат функции
         function sendMessage() {
-            const messageInput = document.getElementById('message-input');
-            const text = messageInput.value;
-            if (text) {
-                ws.send(JSON.stringify({
-                    type: 'chat',
-                    user: currentUser,
-                    text: text
-                }));
-                messageInput.value = '';
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || !ws || ws.readyState !== WebSocket.OPEN) return;
+            
+            if (message.length > 300) {
+                showNotification('Сообщение слишком длинное (макс. 300 символов)', 'error');
+                return;
             }
+
+            ws.send(JSON.stringify({
+                type: 'chat_message',
+                sender: currentUser.nickname,
+                message: message,
+                timestamp: new Date().toISOString()
+            }));
+
+            input.value = '';
         }
 
-        function showNotification(message, type) {
-            const notificationContainer = document.getElementById('notification-container');
-            const notification = document.createElement('div');
-            notification.classList.add('notification', type);
-            notification.textContent = message;
-            notificationContainer.appendChild(notification);
-
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
-
-        function showSettings() {
-            showSection('settingsSection');
-            loadSettings();
-        }
-
-        function showShop() {
-            showSection('shopSection');
-            loadShopItems('avatars');
-        }
-
-        function showAvatars() {
-            showSection('avatarsSection');
-            loadAvatars();
-        }
-
-        // Функции настроек
-        function changeTheme(theme) {
-            document.querySelectorAll('.theme-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            document.querySelector(`[data-theme="${theme}"]`).classList.add('selected');
+        function addChatMessage(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.className = 'chat-message';
             
-            // Применяем тему
-            document.body.className = theme !== 'default' ? `theme-${theme}` : '';
+            const senderElement = document.createElement('strong');
+            senderElement.textContent = sender + ': ';
             
-            // Сохраняем в localStorage
-            localStorage.setItem('selectedTheme', theme);
+            messageElement.appendChild(senderElement);
+            messageElement.appendChild(document.createTextNode(message));
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        function toggleAnimations() {
-            const enabled = document.getElementById('animationsEnabled').checked;
-            if (!enabled) {
-                document.body.style.setProperty('--animation-duration', '0s');
-            } else {
-                document.body.style.removeProperty('--animation-duration');
+        // Админ функции
+        function forceStartGame() {
+            if (!isAdmin) return;
+            
+            ws.send(JSON.stringify({
+                type: 'admin_force_start',
+                admin: currentUser.nickname
+            }));
+            
+            showNotification('Игра принудительно запущена', 'success');
+        }
+
+        function addBot() {
+            if (!isAdmin) return;
+            
+            const botNames = ['Бот_1', 'Бот_2', 'Бот_3', 'Бот_4', 'Бот_5'];
+            const randomName = botNames[Math.floor(Math.random() * botNames.length)] + '_' + Date.now();
+            
+            ws.send(JSON.stringify({
+                type: 'admin_add_bot',
+                admin: currentUser.nickname,
+                botName: randomName
+            }));
+            
+            showNotification(`Бот ${randomName} добавлен`, 'success');
+        }
+
+        function endGame() {
+            if (!isAdmin) return;
+            
+            ws.send(JSON.stringify({
+                type: 'admin_end_game',
+                admin: currentUser.nickname
+            }));
+            
+            showNotification('Игра завершена', 'success');
+        }
+
+        function showKickModal() {
+            if (!isAdmin) return;
+            
+            // Заполняем список игроков
+            const select = document.getElementById('kickPlayerSelect');
+            select.innerHTML = '<option value="">Выберите игрока</option>';
+            // Здесь должен быть список реальных игроков
+            
+            document.getElementById('kickModal').classList.add('active');
+        }
+
+        function showBanModal() {
+            if (!isAdmin) return;
+            
+            // Заполняем список игроков
+            const select = document.getElementById('banPlayerSelect');
+            select.innerHTML = '<option value="">Выберите игрока</option>';
+            // Здесь должен быть список реальных игроков
+            
+            document.getElementById('banModal').classList.add('active');
+        }
+
+        function confirmKick() {
+            const player = document.getElementById('kickPlayerSelect').value;
+            const reason = document.getElementById('kickReason').value.trim();
+            
+            if (!player) {
+                showNotification('Выберите игрока', 'error');
+                return;
             }
-            localStorage.setItem('animationsEnabled', enabled);
-        }
-
-        function toggleSounds() {
-            const enabled = document.getElementById('soundsEnabled').checked;
-            localStorage.setItem('soundsEnabled', enabled);
-        }
-
-        function saveSettings() {
-            showNotification('Настройки сохранены!', 'success');
-        }
-
-        function loadSettings() {
-            // Загружаем сохраненные настройки
-            const theme = localStorage.getItem('selectedTheme') || 'default';
-            const animations = localStorage.getItem('animationsEnabled') !== 'false';
-            const sounds = localStorage.getItem('soundsEnabled') !== 'false';
             
-            changeTheme(theme);
-            document.getElementById('animationsEnabled').checked = animations;
-            document.getElementById('soundsEnabled').checked = sounds;
-            
-            if (!animations) {
-                document.body.style.setProperty('--animation-duration', '0s');
+            if (!reason) {
+                showNotification('Укажите причину', 'error');
+                return;
             }
+            
+            ws.send(JSON.stringify({
+                type: 'admin_kick_player',
+                admin: currentUser.nickname,
+                player: player,
+                reason: reason
+            }));
+            
+            closeModal('kickModal');
+            showNotification(`Игрок ${player} кикнут`, 'success');
         }
 
-        // Функции магазина
-        const shopData = {
-            avatars: [
-                { id: 'av1', icon: '🎭', name: 'Маска', price: 0, owned: true },
-                { id: 'av2', icon: '👤', name: 'Человек', price: 0, owned: true },
-                { id: 'av3', icon: '🕵️', name: 'Детектив', price: 0, owned: true },
-                { id: 'av4', icon: '👑', name: 'Король', price: 0, owned: true },
-                { id: 'av5', icon: '🎪', name: 'Цирк', price: 0, owned: true },
-                { id: 'av6', icon: '🎯', name: 'Мишень', price: 0, owned: true },
-                { id: 'av7', icon: '🦹', name: 'Злодей', price: 0, owned: true },
-                { id: 'av8', icon: '🧙', name: 'Маг', price: 0, owned: true },
-                { id: 'av9', icon: '🤖', name: 'Робот', price: 0, owned: true },
-                { id: 'av10', icon: '👻', name: 'Призрак', price: 0, owned: true },
-                { id: 'av11', icon: '🐺', name: 'Волк', price: 0, owned: true },
-                { id: 'av12', icon: '🦊', name: 'Лиса', price: 0, owned: true }
-            ],
-            frames: [
-                { id: 'fr1', icon: '🔥', name: 'Огненная', price: 0, owned: true },
-                { id: 'fr2', icon: '❄️', name: 'Ледяная', price: 0, owned: true },
-                { id: 'fr3', icon: '⚡', name: 'Молния', price: 0, owned: true },
-                { id: 'fr4', icon: '🌟', name: 'Звездная', price: 0, owned: true }
-            ],
-            titles: [
-                { id: 'ti1', icon: '👑', name: 'Мастер', price: 0, owned: true },
-                { id: 'ti2', icon: '🏆', name: 'Чемпион', price: 0, owned: true },
-                { id: 'ti3', icon: '⭐', name: 'Легенда', price: 0, owned: true },
-                { id: 'ti4', icon: '💎', name: 'Элита', price: 0, owned: true }
-            ],
-            effects: [
-                { id: 'ef1', icon: '✨', name: 'Блеск', price: 0, owned: true },
-                { id: 'ef2', icon: '🌈', name: 'Радуга', price: 0, owned: true },
-                { id: 'ef3', icon: '💫', name: 'Звезды', price: 0, owned: true },
-                { id: 'ef4', icon: '🔮', name: 'Магия', price: 0, owned: true }
-            ]
-        };
+        function confirmBan() {
+            const player = document.getElementById('banPlayerSelect').value;
+            const reason = document.getElementById('banReason').value.trim();
+            const duration = document.getElementById('banDuration').value;
+            
+            if (!player) {
+                showNotification('Выберите игрока', 'error');
+                return;
+            }
+            
+            if (!reason) {
+                showNotification('Укажите причину', 'error');
+                return;
+            }
+            
+            ws.send(JSON.stringify({
+                type: 'admin_ban_player',
+                admin: currentUser.nickname,
+                player: player,
+                reason: reason,
+                duration: parseInt(duration)
+            }));
+            
+            closeModal('banModal');
+            showNotification(`Игрок ${player} забанен`, 'success');
+        }
 
-        // Данные эффектов для никнеймов
-        const nicknameEffects = {
-            styles: [
-                { id: 'default', name: 'Стандарт', class: 'nickname-default', price: 0, owned: true },
-                { id: 'neon', name: 'Неон', class: 'nickname-neon', price: 0, owned: true },
-                { id: 'fire', name: 'Огонь', class: 'nickname-fire', price: 0, owned: true },
-                { id: 'ice', name: 'Лёд', class: 'nickname-ice', price: 0, owned: true },
-                { id: 'glitch', name: 'Глитч', class: 'nickname-glitch', price: 0, owned: true },
-                { id: 'rainbow', name: 'Радуга', class: 'nickname-rainbow', price: 0, owned: true },
-                { id: 'gold', name: 'Золото', class: 'nickname-gold', price: 0, owned: true },
-                { id: 'matrix', name: 'Матрица', class: 'nickname-matrix', price: 0, owned: true },
-                { id: 'space', name: 'Космос', class: 'nickname-space', price: 0, owned: true },
-                { id: 'lava', name: 'Лава', class: 'nickname-lava', price: 0, owned: true },
-                { id: 'cyber', name: 'Кибер', class: 'nickname-cyber', price: 0, owned: true },
-                { id: 'magic', name: 'Магия', class: 'nickname-magic', price: 0, owned: true }
-            ],
-            frames: [
-                { id: 'none', name: 'Без рамки', class: '', price: 0, owned: true },
-                { id: 'diamond', name: 'Алмаз', class: 'nickname-frame-diamond', price: 0, owned: true },
-                { id: 'crown', name: 'Корона', class: 'nickname-frame-crown', price: 0, owned: true },
-                { id: 'fire', name: 'Огненная', class: 'nickname-frame-fire', price: 0, owned: true }
-            ],
-            titles: [
-                { id: 'none', name: 'Без титула', title: '', price: 0, owned: true },
-                { id: 'master', name: 'Мастер', title: '👑 МАСТЕР', price: 0, owned: true },
-                { id: 'legend', name: 'Легенда', title: '⭐ ЛЕГЕНДА', price: 0, owned: true },
-                { id: 'champion', name: 'Чемпион', title: '🏆 ЧЕМПИОН', price: 0, owned: true },
-                { id: 'elite', name: 'Элита', title: '💎 ЭЛИТА', price: 0, owned: true }
-            ]
-        };
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
 
-        // Текущие выбранные эффекты
-        let selectedNicknameStyle = 'default';
-        let selectedNicknameFrame = 'none';
-        let selectedNicknameTitle = 'none';
-
-        // Функция для применения эффектов к никнейму
+        // Функции эффектов никнейма
         function applyNicknameEffects(nickname, style, frame, title) {
             const styleData = nicknameEffects.styles.find(s => s.id === style);
             const frameData = nicknameEffects.frames.find(f => f.id === frame);
@@ -1369,78 +1129,67 @@
             return `<span class="${classes}" ${titleAttr} ${textAttr}>${nickname}</span>`;
         }
 
-        // Функция для загрузки эффектов в магазин
-        function loadNicknameEffectsShop() {
-            const container = document.getElementById('shopItems');
-            const activeCategory = document.querySelector('.shop-category.active').dataset.category;
+        function showShopCategory(category) {
+            document.querySelectorAll('[data-category]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('active');
             
-            let items = [];
-            if (activeCategory === 'styles') {
-                items = nicknameEffects.styles;
-            } else if (activeCategory === 'frames') {
-                items = nicknameEffects.frames;
-            } else if (activeCategory === 'titles') {
-                items = nicknameEffects.titles;
-            }
+            loadShopItems(category);
+        }
+
+        function loadShopItems(category) {
+            const container = document.getElementById('shopItems');
+            const items = nicknameEffects[category] || [];
             
             container.innerHTML = items.map(item => `
-                <div class="shop-item ${item.owned ? 'owned' : ''}" onclick="buyNicknameEffect('${item.id}', '${activeCategory}')">
-                    <div class="shop-item-preview">
-                        ${applyNicknameEffects('Пример', 
-                            activeCategory === 'styles' ? item.id : 'default',
-                            activeCategory === 'frames' ? item.id : 'none', 
-                            activeCategory === 'titles' ? item.id : 'none'
-                        )}
+                <div class="card" style="cursor: pointer; ${item.owned ? 'border: 2px solid #28a745;' : ''}" onclick="buyNicknameEffect('${item.id}', '${category}')">
+                    <div style="text-align: center;">
+                        <div style="margin-bottom: 15px;">
+                            ${applyNicknameEffects('Пример', 
+                                category === 'styles' ? item.id : 'default',
+                                category === 'frames' ? item.id : 'none', 
+                                category === 'titles' ? item.id : 'none'
+                            )}
+                        </div>
+                        <h4>${item.name}</h4>
+                        <p style="color: ${item.price === 0 ? '#28a745' : '#667eea'}; font-weight: 600;">
+                            ${item.price === 0 ? 'Бесплатно' : item.price + ' монет'}
+                        </p>
+                        ${item.owned ? '<p style="color: #28a745; font-size: 14px;">✓ Куплено</p>' : ''}
                     </div>
-                    <div class="shop-item-name">${item.name}</div>
-                    <div class="shop-item-price ${item.price === 0 ? 'free' : ''}">${item.price === 0 ? 'Бесплатно' : item.price + ' монет'}</div>
-                    ${item.owned ? '<div style="color: #27ae60; font-size: 12px; margin-top: 5px;">✓ Куплено</div>' : ''}
                 </div>
             `).join('');
         }
 
-        // Функция покупки эффекта
         function buyNicknameEffect(effectId, category) {
             const categoryData = nicknameEffects[category];
             const effect = categoryData.find(e => e.id === effectId);
             
-            if (!effect) return;
+            if (!effect || !effect.owned) return;
             
-            if (effect.owned) {
-                // Применяем эффект
-                if (category === 'styles') {
-                    selectedNicknameStyle = effectId;
-                } else if (category === 'frames') {
-                    selectedNicknameFrame = effectId;
-                } else if (category === 'titles') {
-                    selectedNicknameTitle = effectId;
-                }
-                
-                // Сохраняем выбор
-                localStorage.setItem('selectedNicknameStyle', selectedNicknameStyle);
-                localStorage.setItem('selectedNicknameFrame', selectedNicknameFrame);
-                localStorage.setItem('selectedNicknameTitle', selectedNicknameTitle);
-                
-                // Обновляем отображение
-                updateNicknamePreview();
-                showNotification(`Эффект "${effect.name}" применён!`, 'success');
-                
-                return;
+            if (category === 'styles') {
+                selectedNicknameStyle = effectId;
+            } else if (category === 'frames') {
+                selectedNicknameFrame = effectId;
+            } else if (category === 'titles') {
+                selectedNicknameTitle = effectId;
             }
             
-            // Покупаем эффект (пока все бесплатно)
-            effect.owned = true;
+            localStorage.setItem('selectedNicknameStyle', selectedNicknameStyle);
+            localStorage.setItem('selectedNicknameFrame', selectedNicknameFrame);
+            localStorage.setItem('selectedNicknameTitle', selectedNicknameTitle);
             
-            showNotification(`Эффект "${effect.name}" добавлен в коллекцию!`, 'success');
-            loadNicknameEffectsShop();
+            updateNicknamePreview();
+            updateProfileDisplay();
+            showNotification(`Эффект "${effect.name}" применён!`, 'success');
         }
 
-        // Функция обновления предпросмотра никнейма
         function updateNicknamePreview() {
             const previewContainer = document.getElementById('nicknamePreview');
             if (previewContainer && currentUser) {
                 previewContainer.innerHTML = applyNicknameEffects(
-                    currentUser.nickname || 'Игрок',
+                    currentUser.nickname,
                     selectedNicknameStyle,
                     selectedNicknameFrame,
                     selectedNicknameTitle
@@ -1448,7 +1197,6 @@
             }
         }
 
-        // Загрузка сохранённых эффектов
         function loadNicknameEffects() {
             selectedNicknameStyle = localStorage.getItem('selectedNicknameStyle') || 'default';
             selectedNicknameFrame = localStorage.getItem('selectedNicknameFrame') || 'none';
@@ -1456,134 +1204,61 @@
             updateNicknamePreview();
         }
 
-        function showShopCategory(category) {
-            document.querySelectorAll('.shop-category').forEach(cat => {
-                cat.classList.remove('active');
+        // Функции настроек
+        function changeTheme(theme) {
+            document.querySelectorAll('[data-theme]').forEach(btn => {
+                btn.classList.remove('active');
             });
-            document.querySelector(`[data-category="${category}"]`).classList.add('active');
+            document.querySelector(`[data-theme="${theme}"]`).classList.add('active');
             
-            if (['styles', 'frames', 'titles'].includes(category)) {
-                loadNicknameEffectsShop();
-            } else {
-                loadShopItems(category);
-            }
+            document.body.className = theme !== 'default' ? `theme-${theme}` : '';
+            localStorage.setItem('selectedTheme', theme);
         }
 
-        // Функции аватарок
-        function loadAvatars() {
-            const container = document.getElementById('avatarGrid');
-            const avatars = shopData.avatars;
-            const ownedItems = JSON.parse(localStorage.getItem('ownedItems') || '{}');
-            const ownedAvatars = ownedItems.avatars || [];
-            
-            // Определяем текущую аватарку
-            let currentAvatar = '🎭';
-            if (currentUser) {
-                if (currentUser.avatarType === 'emoji') {
-                    currentAvatar = currentUser.avatar || '🎭';
-                    selectedAvatarType = 'emoji';
-                    selectedAvatarValue = currentAvatar;
-                } else if (currentUser.avatarType === 'custom') {
-                    selectedAvatarType = 'custom';
-                    selectedAvatarValue = currentUser.customAvatarId;
-                }
-            }
-            
-            container.innerHTML = avatars.map(avatar => {
-                const isOwned = avatar.owned || ownedAvatars.includes(avatar.id);
-                const isSelected = selectedAvatarType === 'emoji' && avatar.icon === currentAvatar;
-                
-                return `
-                    <div class="avatar-option ${isSelected ? 'selected' : ''} ${!isOwned ? 'locked' : ''}" 
-                         data-avatar="${avatar.icon}" 
-                         onclick="${isOwned ? `selectAvatar('${avatar.icon}')` : `showNotification('Купите эту аватарку в магазине!', 'error')`}">
-                        ${avatar.icon}
-                    </div>
-                `;
-            }).join('');
-            
-            // Загружаем пользовательские аватарки
-            loadCustomAvatars();
+        function toggleAnimations() {
+            const enabled = document.getElementById('animationsEnabled').checked;
+            localStorage.setItem('animationsEnabled', enabled);
         }
 
-        function selectCustomAvatar(avatarId) {
-            // Убираем выделение со всех аватарок
-            document.querySelectorAll('.avatar-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            
-            // Выделяем выбранную
-            event.target.closest('.avatar-option').classList.add('selected');
-            
-            selectedAvatarType = 'custom';
-            selectedAvatarValue = avatarId;
+        function toggleSounds() {
+            const enabled = document.getElementById('soundsEnabled').checked;
+            localStorage.setItem('soundsEnabled', enabled);
         }
 
-        // Обновляем функцию selectAvatar для эмодзи
-        function selectAvatar(avatar) {
-            document.querySelectorAll('.avatar-option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            document.querySelector(`[data-avatar="${avatar}"]`).classList.add('selected');
+        function saveSettings() {
+            showNotification('Настройки сохранены!', 'success');
+        }
+
+        function loadSettings() {
+            const theme = localStorage.getItem('selectedTheme') || 'default';
+            const animations = localStorage.getItem('animationsEnabled') !== 'false';
+            const sounds = localStorage.getItem('soundsEnabled') !== 'false';
             
-            selectedAvatarType = 'emoji';
-            selectedAvatarValue = avatar;
+            changeTheme(theme);
+            document.getElementById('animationsEnabled').checked = animations;
+            document.getElementById('soundsEnabled').checked = sounds;
         }
 
-        // Обновляем функцию saveAvatar
-        function saveAvatar() {
-            if (!selectedAvatarValue) {
-                showNotification('Выберите аватарку!', 'error');
-                return;
-            }
-            
-            if (currentUser) {
-                currentUser.avatarType = selectedAvatarType;
-                
-                if (selectedAvatarType === 'emoji') {
-                    currentUser.avatar = selectedAvatarValue;
-                    currentUser.customAvatarId = null;
-                } else {
-                    currentUser.customAvatarId = selectedAvatarValue;
-                    currentUser.avatar = null;
-                }
-                
-                localStorage.setItem('mafiaUser', JSON.stringify(currentUser));
-                updateProfileDisplay();
-                showNotification('Аватарка сохранена!', 'success');
-            }
-        }
-
-        // Функция для получения аватарки пользователя
-        function getUserAvatar(user) {
-            if (user.avatarType === 'custom' && user.customAvatarId) {
-                const customAvatar = customAvatars.find(av => av.id === user.customAvatarId);
-                if (customAvatar) {
-                    return `<img src="${customAvatar.data}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">`;
-                }
-            }
-            return user.avatar || '👤';
-        }
-
-        // Обновляем функцию updateProfileDisplay
+        // Обновление профиля
         function updateProfileDisplay() {
             if (!currentUser) return;
             
-            const profileAvatar = document.getElementById('profileAvatar');
+            const profileNickname = document.getElementById('profileNickname');
+            const profileEmail = document.getElementById('profileEmail');
             
-            if (currentUser.avatarType === 'custom' && currentUser.customAvatarId) {
-                const customAvatar = customAvatars.find(av => av.id === currentUser.customAvatarId);
-                if (customAvatar) {
-                    profileAvatar.innerHTML = `<img src="${customAvatar.data}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">`;
-                } else {
-                    profileAvatar.textContent = currentUser.avatar || '👤';
-                }
-            } else {
-                profileAvatar.textContent = currentUser.avatar || '👤';
+            if (profileNickname) {
+                profileNickname.innerHTML = applyNicknameEffects(
+                    currentUser.nickname,
+                    selectedNicknameStyle,
+                    selectedNicknameFrame,
+                    selectedNicknameTitle
+                );
             }
             
-            document.getElementById('profileNickname').textContent = currentUser.nickname;
-            document.getElementById('profileEmail').textContent = currentUser.email || 'Не указан';
+            if (profileEmail) {
+                profileEmail.textContent = currentUser.email;
+            }
+            
             document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
             document.getElementById('gamesWon').textContent = currentUser.gamesWon || 0;
             
@@ -1593,15 +1268,43 @@
             document.getElementById('winRate').textContent = winRate + '%';
         }
 
-        // Инициализация при загрузке
-        document.addEventListener('DOMContentLoaded', function() {
-            setupImageUpload();
-            loadNicknameEffects();
-            // ... остальная инициализация
+        // Уведомления
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <strong>${type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}</strong>
+                ${message}
+            `;
+            
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Обработчики событий
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
         });
 
-        connectWebSocket();
-        loadSettings();
+        // Закрытие модальных окон по клику вне них
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Инициализация магазина
+        setTimeout(() => {
+            showShopCategory('styles');
+        }, 100);
     </script>
 </body>
 </html>
